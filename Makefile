@@ -2,7 +2,7 @@ SFLAGS =
 PORT = 9000
 START_TIME = 7
 LOOP_TIME = 10
-MAX_TARGET = 99
+MAX_OBJECTIVE = 99
 
 # if "none" then run locally without server code
 SERVER = none
@@ -34,7 +34,7 @@ SYNOPSYS_SIM_COMMON = \
 	+port=$(PORT) \
 	+start_time=$(START_TIME) \
 	+loop_time=$(LOOP_TIME) \
-	+max_target=$(MAX_TARGET) \
+	+max_objective=$(MAX_OBJECTIVE) \
 	-ucli \
 	-ucli2Proc \
 	$(SFLAGS) -l $(SYNOPSYS_SIM_LOG)
@@ -96,7 +96,7 @@ synopsys_reload: build_synopsys sim_synopsys_reload
 
 build_synopsys: clean ## Synopsys VCS Build
 	@mkdir snps_work
-	@touch target
+	@touch objective
 
 	vcs $(SYNOPSYS_BUILD_COMMON) $(BUILD_LIST)
 
@@ -121,7 +121,7 @@ report_summary: ## Report Summary
 
 clean: ## Cleans up work area
 	@rm -rf snps_work
-	@rm -rf target
+	@rm -rf objective
 	@rm -f .vcs_checkpoint*
 	@rm -f inter.fsdb
 	@rm -f *.log
@@ -130,7 +130,7 @@ clean: ## Cleans up work area
 	@rm -rf vericomLog
 	@rm -rf work.lib++
 	@rm -f seed
-	@rm -f target
+	@rm -f objective
 	@rm -rf libnz4w_r.soLog
 	@rm -f .inter.fsdb*
 	@rm -f signal.tc

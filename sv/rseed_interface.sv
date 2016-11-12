@@ -8,7 +8,7 @@ interface rseed_interface (
    time                    loop_time       = 10;
    bit                     final_report    = 0;
    real                    coverage_value  = 0;
-   int                     max_target      = 100;
+   int                     max_objective      = 100;
    int                     unsigned seed;
 
    irand::master_seed      ms;
@@ -47,9 +47,9 @@ interface rseed_interface (
       ms       = irand::master_seed::get_instance();
       server      = ms.server;
       port        = ms.port;
-      max_target  = ms.max_target;
+      max_objective  = ms.max_objective;
       seed        = ms.return_seed();
-      `uvm_info("RS", $sformatf("DEBUG ntb_random_seed: %d, server: %s, port: %d, max_target: %d", seed, server, port, max_target), UVM_LOW)
+      `uvm_info("RS", $sformatf("DEBUG ntb_random_seed: %d, server: %s, port: %d, max_objective: %d", seed, server, port, max_objective), UVM_LOW)
 
       `uvm_info("TOP", $sformatf("master coverage value is %d", coverage_value), UVM_MEDIUM)
 
@@ -64,7 +64,7 @@ interface rseed_interface (
          #(loop_time);
 
          // use variable instead of file to pass over coverage value
-         coverage_value                 = dut.target.match.get_coverage();
+         coverage_value                 = dut.objective.match.get_coverage();
          ms.set_coverage_value(coverage_value);
 
          `uvm_info("TOP", $sformatf("INFO STATUS :  SV : %0t : a = %d, b = %d, c = %d, match = %d, seed = %d, cg = %f",
@@ -78,8 +78,8 @@ interface rseed_interface (
 
          // set off the trigger for the simulator TCL shell to process
          trigger                        = ~trigger;
-         if (ms.get_coverage_value() >= ms.max_target) begin
-            `uvm_info("TOP", $sformatf("COVERAGE GOAL MET coverage: %d max_target: %d", ms.get_coverage_value(), ms.max_target), UVM_LOW)
+         if (ms.get_coverage_value() >= ms.max_objective) begin
+            `uvm_info("TOP", $sformatf("COVERAGE GOAL MET coverage: %d max_objective: %d", ms.get_coverage_value(), ms.max_objective), UVM_LOW)
             // $finish();
             final_report  = 1;
          end

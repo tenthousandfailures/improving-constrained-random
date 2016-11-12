@@ -13,6 +13,7 @@ seed
 signal.rc
 signal.tc
 sim.log
+.DS_Store
 snps_work/
 t
 target

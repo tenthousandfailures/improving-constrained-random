@@ -12,8 +12,8 @@ namespace eval ::rclass {
 
     set ctime [senv time]
 
-    set old_target [expr -1];
-    set new_target 0.0;
+    set old_objective [expr -1];
+    set new_objective 0.0;
 
     # file name handle number of report file
     set replicate_id 0
@@ -26,7 +26,7 @@ namespace eval ::rclass {
 
     set check_id "";
 
-    set max_target 100.0;
+    set max_objective 100.0;
 
     # time value of last EXISTING processed
     set p_existing [expr -1]
@@ -43,14 +43,14 @@ proc ::rclass::final_report {} {
 proc ::rclass::reload_loop {} {
 
     variable ctime
-    variable old_target
-    variable new_target
+    variable old_objective
+    variable new_objective
     variable ptime
     variable last_seed
     variable ptline
     variable check_id
     variable iteration_count
-    variable max_target
+    variable max_objective
     variable replicate_id
 
     set ctime [senv time];
@@ -85,15 +85,15 @@ proc ::rclass::send_progress {} {
     variable port
 
     variable ptime
-    variable old_target
-    variable new_target
+    variable old_objective
+    variable new_objective
     variable last_seed
 
     # set server 127.0.0.1
     set sockChan [socket $server 9900]
 
     # client sends in its proposed time and seed
-    puts $sockChan "PROPOSED_SEED $ptime $last_seed $new_target RUNX";
+    puts $sockChan "PROPOSED_SEED $ptime $last_seed $new_objective RUNX";
     flush $sockChan;
 
     # server evaluates the PROPOSED_SEED and responds with CURRENT_SEED
@@ -109,15 +109,15 @@ proc ::rclass::eval_loop {} {
     variable port
 
     variable ctime
-    variable old_target
-    variable new_target
+    variable old_objective
+    variable new_objective
     variable replicate_id
     variable ptime
     variable last_seed
     variable ptline
     variable check_id
     variable iteration_count
-    variable max_target
+    variable max_objective
 
     variable p_existing
 
@@ -136,9 +136,9 @@ proc ::rclass::eval_loop {} {
     # DEBUG
     # puts "ITERATION: ${iteration_count}"
 
-    set new_target [get top.rseed_interface.coverage_value -radix decimal]
+    set new_objective [get top.rseed_interface.coverage_value -radix decimal]
     set last_seed [format %u $last_seed]
-    # set new_target [call top.get_coverage_value()]
+    # set new_objective [call top.get_coverage_value()]
 
     if { [string equal $server "none"] } {
         set line "LOCAL"
@@ -153,14 +153,14 @@ proc ::rclass::eval_loop {} {
 
         # puts "INFO STATUS : TCL : SERVER EXISTING seed: $last_seed to be used at time: $ptime"
 
-        puts "ptime: $ptime : $old_target -> $new_target : seed $last_seed"
-        puts $replicate_id "$ptime : $old_target -> $new_target : seed $last_seed"
+        puts "ptime: $ptime : $old_objective -> $new_objective : seed $last_seed"
+        puts $replicate_id "$ptime : $old_objective -> $new_objective : seed $last_seed"
 
         # DONT REWIND TO TIME 0
         if { [string equal $ptime "0 ns"] } {
             puts "DEBUG TIME ZERO NO REWIND"
             set ptime [senv time];
-            set old_target "$new_target"
+            set old_objective "$new_objective"
 
             set last_seed [format %u [lindex $line end]]
             call top.rseed_interface.set_seed(32'd${last_seed})
@@ -174,7 +174,7 @@ proc ::rclass::eval_loop {} {
                 puts "DEBUG DO NOT REWIND"
                 set ptime [senv time]
                 # set p_existing $ptime
-                set old_target "$new_target"
+                set old_objective "$new_objective"
 
                 puts "DEBUG STATUS : TCL : EXISTING SEED PREVIOUS used of [lindex $line end] for $ptime"
                 set last_seed [format %u [lindex $line end]]
@@ -202,15 +202,15 @@ proc ::rclass::eval_loop {} {
 
         puts "INFO STATUS : TCL : SERVER ACCEPTED seed: $last_seed at time: $ptime"
 
-        puts $replicate_id "$ptime : $old_target -> $new_target : seed $last_seed"
+        puts $replicate_id "$ptime : $old_objective -> $new_objective : seed $last_seed"
         flush $replicate_id;
 
-        puts "INFO STATUS : TCL : $ctime : GOOD : $new_target > $old_target"
-        set old_target "$new_target"; #
+        puts "INFO STATUS : TCL : $ctime : GOOD : $new_objective > $old_objective"
+        set old_objective "$new_objective"; #
 
         # print out times and seed values used
         set ptime [senv time];
-        # puts "DEBUG old_target is now $old_target and ptime is $ptime"
+        # puts "DEBUG old_objective is now $old_objective and ptime is $ptime"
 
         checkpoint -kill 0;
         set check_id [checkpoint -add "check"]
@@ -221,7 +221,7 @@ proc ::rclass::eval_loop {} {
         puts "INFO STATUS : TCL : SERVER REJECTED seed: $last_seed at time: $ptime"
 
         # DEBUG
-        puts "INFO STATUS : TCL : $ctime : NO PROGRESS : false: $new_target > $old_target REWINDING TO CHECKPOINT {$check_id} at $ptime"; #
+        puts "INFO STATUS : TCL : $ctime : NO PROGRESS : false: $new_objective > $old_objective REWINDING TO CHECKPOINT {$check_id} at $ptime"; #
         checkpoint -join "$check_id" -keep;
         # checkpoint -list
 
@@ -239,17 +239,17 @@ proc ::rclass::eval_loop {} {
 
     } elseif { [string equal $status "LOCAL"] } {
 
-        if { [expr "$new_target" > "$old_target"] || [expr "$new_target" >= ${max_target}] } {
+        if { [expr "$new_objective" > "$old_objective"] || [expr "$new_objective" >= ${max_objective}] } {
             puts "INFO STATUS : TCL : LOCAL ACCEPTED seed: $last_seed at time: $ptime"
-            puts $replicate_id "$ptime : $old_target -> $new_target : seed $last_seed"
+            puts $replicate_id "$ptime : $old_objective -> $new_objective : seed $last_seed"
             flush $replicate_id;
 
-            puts "INFO STATUS : TCL : $ctime : GOOD : $new_target > $old_target"
-            set old_target "$new_target"; #
+            puts "INFO STATUS : TCL : $ctime : GOOD : $new_objective > $old_objective"
+            set old_objective "$new_objective"; #
 
             # print out times and seed values used
             set ptime [senv time];
-            # puts "DEBUG old_target is now $old_target and ptime is $ptime"
+            # puts "DEBUG old_objective is now $old_objective and ptime is $ptime"
 
             checkpoint -kill 0;
             set check_id [checkpoint -add "check"]
@@ -259,7 +259,7 @@ proc ::rclass::eval_loop {} {
             puts "INFO STATUS : TCL : LOCAL REJECTED seed: $last_seed at time: $ptime"
 
             # DEBUG
-            puts "INFO STATUS : TCL : $ctime : NO PROGRESS : false: $new_target > $old_target REWINDING TO CHECKPOINT {$check_id} at $ptime"; #
+            puts "INFO STATUS : TCL : $ctime : NO PROGRESS : false: $new_objective > $old_objective REWINDING TO CHECKPOINT {$check_id} at $ptime"; #
             checkpoint -join "$check_id" -keep;
             # checkpoint -list
 
@@ -280,8 +280,8 @@ proc ::rclass::eval_loop {} {
         puts "INFO STATUS : TCL : SERVER ERROR SHOULD NOT GET HERE at time ctime: $ctime - $line"
     }
 
-    if {[expr "$new_target" >= "${max_target}"]} {
-        puts "INFO STATUS : TCL : MET TARGET!"
+    if {[expr "$new_objective" >= "${max_objective}"]} {
+        puts "INFO STATUS : TCL : MET OBJECTIVE!"
     }
 
     # TODO DEBUG ONLY WAIT
@@ -302,7 +302,7 @@ proc ::rclass::main {} {
 
     variable server
     variable port
-    variable max_target
+    variable max_objective
     variable last_seed
 
     set replicate_id [open "replicate" "w"]
@@ -313,7 +313,7 @@ proc ::rclass::main {} {
     # call top.get_instance()
     set server [get top.rseed_interface.server]
     set port [get top.rseed_interface.port]
-    set max_target [get top.rseed_interface.max_target]
+    set max_objective [get top.rseed_interface.max_objective]
     set last_seed [format %u [get top.rseed_interface.seed]]
 
     puts "DEBUG last_seed : $last_seed"

@@ -9,7 +9,7 @@ class master_seed extends uvm_object;
    local static semaphore synchronized         = new(1);
    static string server                        = "localhost";
    static int port                             = 999;
-   static int max_target                       = 100;
+   static int max_objective                    = 100;
 
    local static real coverage_value            = 0;
 
@@ -30,7 +30,7 @@ class master_seed extends uvm_object;
 
                $value$plusargs("server=%s", server);
                $value$plusargs("port=%d", port);
-               $value$plusargs("max_target=%d", max_target);
+               $value$plusargs("max_objective=%d", max_objective);
 
                // $value$plusargs("ntb_random_seed=%d", sim_initial_seed);
                // replaced by the following
@@ -39,7 +39,7 @@ class master_seed extends uvm_object;
                // give the given initial seed to our seed
                unique_instance.seed              = sim_initial_seed;
 
-               `uvm_info("MS", $sformatf("DEBUG SINGLETON START - ntb_random_seed: %d, server: %s, port: %d, max_target: %d", seed, server, port, max_target), UVM_LOW)
+               `uvm_info("MS", $sformatf("DEBUG SINGLETON START - ntb_random_seed: %d, server: %s, port: %d, max_objective: %d", seed, server, port, max_objective), UVM_LOW)
 
                // `uvm_info("MS", "making new!", UVM_HIGH)
                synchronized.put();

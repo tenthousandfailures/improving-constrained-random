@@ -39,11 +39,11 @@ module dut #(parameter width=2) (
    reg [width:0]           match;
 
    // grab coverage automatically
-   covergroup target_cg;
+   covergroup objective_cg;
       coverpoint match;
    endgroup
 
-   target_cg target;
+   objective_cg objective;
 
    // EX 1. DEFAULT a == b match
    assign c = (a == b);
@@ -62,7 +62,7 @@ module dut #(parameter width=2) (
 
          // not good but need to wait just after posedge clk to sample register
          #1;
-         target.sample();
+         objective.sample();
       end else begin
          match <= '0;
       end
@@ -72,7 +72,7 @@ module dut #(parameter width=2) (
 
    // initialize covergroup
    initial begin
-      target = new();
+      objective = new();
    end
 
 endmodule
