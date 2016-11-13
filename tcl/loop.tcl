@@ -18,6 +18,9 @@ stop -quiet -change {top.rseed_interface.final_report} -command {run 0; rclass::
 
 # start main function
 rclass::main
-# run
+
+# TODO WHY DO WE NEED TO DO THIS FOR WIDTH=3
+interp recursionlimit {} 1000000
+run
 
 puts "INFO STATUS : TCL : DONE"

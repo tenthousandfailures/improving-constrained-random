@@ -8,12 +8,15 @@ inter.vpd
 novas.conf
 novas.rc
 novas_dump.log
-replicate
+replicate*
 seed
 signal.rc
 signal.tc
-sim.log
+*.log
+DVEfiles/
+.inter.vpd.uvm
 .DS_Store
+.vcs_checkpoint*
 snps_work/
 t
 target

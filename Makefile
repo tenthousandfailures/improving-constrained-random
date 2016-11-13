@@ -1,7 +1,7 @@
 SFLAGS =
 PORT = 9000
 START_TIME = 7
-LOOP_TIME = 10
+INTERVAL_TIME = 10
 MAX_OBJECTIVE = 99
 
 # if "none" then run locally without server code
@@ -12,9 +12,16 @@ SERVER = none
 SEED = +ntb_random_seed=2
 # SEED =
 
-SYNOPSYS_SIM_LOG = sim.log
+CLIENT_INDEX = 0
+
+PARALLEL_SIMS := 5
+PARALLEL_SIMS_BASE_ZERO := $(shell expr ${PARALLEL_SIMS} - 1)
+NUMBERS := $(shell seq 0 ${PARALLEL_SIMS_BASE_ZERO})
+SIM_SYNOPSYS_PARALLEL_JOBS := $(addprefix sim_synopsys_parallel_job,${NUMBERS})
+
+SYNOPSYS_SIM_LOG = sim_0.log
 SYNOPSYS_SIM_EXEC = ./snps_work/dut
-TARGET_LIST = clean build_synopsys sim_synopsys sim_synopsys_reload sim_synopsys_default synopsys_reload synopsys server client status report_summary report_match help
+TARGET_LIST = clean build_synopsys sim_synopsys sim_synopsys_parallel sim_synopsys_parallel_perf sim_synopsys_reload sim_synopsys_default synopsys_reload synopsys server client status report_summary report_finish_time zombie shutdown help
 WIDTH = 1
 BUILD_LIST = \
 	sv/irand_pkg.sv \
@@ -30,10 +37,13 @@ SYNOPSYS_SIM_COMMON = \
 	+UVM_TESTNAME=test0 \
 	+UVM_VERBOSITY=$(UVM_VERBOSITY) \
 	+ntb_random_seed_automatic $(SEED) \
+	+ntb_cache_dir=ntb_cache_dir_$(CLIENT_INDEX) \
+	+ntb_delete_disk_cache=1 \
+	+client_index=$(CLIENT_INDEX) \
 	+server=$(SERVER) \
 	+port=$(PORT) \
 	+start_time=$(START_TIME) \
-	+loop_time=$(LOOP_TIME) \
+	+interval_time=$(INTERVAL_TIME) \
 	+max_objective=$(MAX_OBJECTIVE) \
 	-ucli \
 	-ucli2Proc \
@@ -81,8 +91,26 @@ SYNOPSYS_BUILD_COMMON = \
 # these are not based off of file triggers
 .PHONY: $(TARGET_LIST)
 
+.PHONY: all ${JOBS}
+sim_synopsys_parallel: ${SIM_SYNOPSYS_PARALLEL_JOBS} ## Runs parallel Synopsys simulations
+	echo "$@ success"
+
+sim_synopsys_parallel_perf: ## Performance of parallel simulations
+	@+$(MAKE) server &
+	date +%s > former_seconds.log
+	@+$(MAKE) sim_synopsys_parallel
+	date +%s > later_seconds.log
+	paste later_seconds.log former_seconds.log | awk '{print $$1 - $$2}' >> runtime.log
+	./tcl/status.tcl >> status.log
+	@+$(MAKE) shutdown
+	echo "$@ success"
+
+${SIM_SYNOPSYS_PARALLEL_JOBS}: sim_synopsys_parallel_job%:
+	+$(MAKE) sim_synopsys CLIENT_INDEX=$* SYNOPSYS_SIM_LOG=sim$*.log
+
 server: ## Starts up a TCL branching server
 	./tcl/server.tcl
+	sleep 5
 
 client: ## Debug client to put values into TCL branching server
 	./tcl/client.tcl
@@ -90,14 +118,16 @@ client: ## Debug client to put values into TCL branching server
 status: ## Status from the TCL server
 	./tcl/status.tcl
 
+shutdown: ## shutdown the the TCL server
+	./tcl/shutdown.tcl
+	sleep 5
+
 synopsys: build_synopsys sim_synopsys ## Runs a Synopsys Build and does a branching simulation
 
-synopsys_reload: build_synopsys sim_synopsys_reload
+synopsys_reload: build_synopsys sim_synopsys_reload ## Builds and Reloads a simulation from file
 
 build_synopsys: clean ## Synopsys VCS Build
 	@mkdir snps_work
-	@touch objective
-
 	vcs $(SYNOPSYS_BUILD_COMMON) $(BUILD_LIST)
 
 sim_synopsys: ## Run a branching simulation
@@ -109,17 +139,19 @@ sim_synopsys_default: ## Run a simulation without any looping
 sim_synopsys_reload: ## Reload a simulation from a seed file
 	$(SYNOPSYS_SIM_EXEC) $(SYNOPSYS_SIM_COMMON) -do tcl/reload.tcl
 
-report_match: ## Print out the matching inputs and seeds
-	@echo ""
-	@cat sim.log | grep "INFO STATUS" | grep "TOP" | grep -v "match = 0"
-	@echo ""
-
 report_summary: ## Report Summary
 	@echo ""
-	@cat sim.log | egrep "ITERATIONS TOTAL|UVM_FATAL|UVM_ERROR|COVERAGE GOAL MET"
+	@cat $(SYNOPSYS_SIM_LOG) | egrep "ITERATIONS TOTAL|UVM_FATAL|UVM_ERROR|COVERAGE GOAL MET"
 	@echo ""
 
+zombie: ## Print out the zombie VCS processes that result from C-c
+	ps aux | grep $(USER) | grep "snps_work/dut" | awk '{print $$2}' | xargs kill -9
+
+report_finish_time: ## Report the finish time of simulation log
+	cat $(SYNOPSYS_SIM_LOG) | grep "finish at sim" | awk '{print $$NF}'
+
 clean: ## Cleans up work area
+	@rm -f replicate_*
 	@rm -rf snps_work
 	@rm -rf objective
 	@rm -f .vcs_checkpoint*
@@ -130,7 +162,6 @@ clean: ## Cleans up work area
 	@rm -rf vericomLog
 	@rm -rf work.lib++
 	@rm -f seed
-	@rm -f objective
 	@rm -rf libnz4w_r.soLog
 	@rm -f .inter.fsdb*
 	@rm -f signal.tc
@@ -144,6 +175,14 @@ clean: ## Cleans up work area
 	@rm -rf vloganLog
 
 help: ## Help Text
+	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+	@echo "  Examples"
+	@echo "    > make synopsys UVM_VERBOSITY=UVM_MEDIUM"
+	@echo "    > make synopsys WIDTH=3"
+	@echo "    > make -j5 sim_synopsys_parallel SERVER=127.0.0.1 PARALLEL_SIMS=5"
+	@echo "    > make status"
+	@echo "    > make sim_synopsys_reload"
 
 .DEFAULT_GOAL := help

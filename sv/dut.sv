@@ -3,11 +3,11 @@ interface dut_if #(parameter width=2) (
           input reset
                                        );
 
-   logic [width:0]          a;
-   logic [width:0]          b;
-   logic                    c;
+   logic [width-1:0] a;
+   logic [width-1:0] b;
+   logic             c;
 
-   task drive(logic [width:0] ia, logic [width:0] ib);
+   task drive(logic [width-1:0] ia, logic [width-1:0] ib);
       // `uvm_info("dut_if", $sformatf("BEFORE drive regs a: %d b: %d", ia, ib), UVM_LOW)
       a = ia;
       b = ib;
@@ -29,14 +29,14 @@ interface dut_if #(parameter width=2) (
 endinterface
 
 module dut #(parameter width=2) (
-       input [width:0] a,
-       input [width:0] b,
+       input [width-1:0] a,
+       input [width-1:0] b,
        input           clk,
        input           reset,
        output          c
                                  );
 
-   reg [width:0]           match;
+   reg [width-1:0]           match;
 
    // grab coverage automatically
    covergroup objective_cg;

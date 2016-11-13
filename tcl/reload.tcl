@@ -14,6 +14,6 @@ stop -quiet -change {top.rseed_interface.final_report} -command {rclass::final_r
 
 # start main function
 rclass::reload_main
-# run
+run
 
 puts "INFO STATUS : TCL : DONE"

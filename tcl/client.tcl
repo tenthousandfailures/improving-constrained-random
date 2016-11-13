@@ -6,7 +6,7 @@ set objective_function 0
 while {1} {
 
     set server 127.0.0.1
-    set sockChan [socket $server 9900]
+    set sockChan [socket $server 9000]
 
     # client sends in its proposed time and seed
     puts $sockChan "PROPOSED_SEED $simtime ns [expr $simtime * 2] $objective_function RUNX";

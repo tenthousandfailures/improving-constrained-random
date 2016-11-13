@@ -30,6 +30,7 @@ namespace eval ::rclass {
 
     # time value of last EXISTING processed
     set p_existing [expr -1]
+    set client_index 0
 
     set iteration_count 0;
 }
@@ -52,6 +53,7 @@ proc ::rclass::reload_loop {} {
     variable iteration_count
     variable max_objective
     variable replicate_id
+    variable client_index
 
     set ctime [senv time];
 
@@ -88,12 +90,13 @@ proc ::rclass::send_progress {} {
     variable old_objective
     variable new_objective
     variable last_seed
+    variable client_index
 
     # set server 127.0.0.1
-    set sockChan [socket $server 9900]
+    set sockChan [socket ${server} ${port}]
 
     # client sends in its proposed time and seed
-    puts $sockChan "PROPOSED_SEED $ptime $last_seed $new_objective RUNX";
+    puts $sockChan "PROPOSED_SEED $ptime $last_seed $new_objective $client_index";
     flush $sockChan;
 
     # server evaluates the PROPOSED_SEED and responds with CURRENT_SEED
@@ -118,6 +121,7 @@ proc ::rclass::eval_loop {} {
     variable check_id
     variable iteration_count
     variable max_objective
+    variable client_index
 
     variable p_existing
 
@@ -154,11 +158,12 @@ proc ::rclass::eval_loop {} {
         # puts "INFO STATUS : TCL : SERVER EXISTING seed: $last_seed to be used at time: $ptime"
 
         puts "ptime: $ptime : $old_objective -> $new_objective : seed $last_seed"
-        puts $replicate_id "$ptime : $old_objective -> $new_objective : seed $last_seed"
 
         # DONT REWIND TO TIME 0
         if { [string equal $ptime "0 ns"] } {
             puts "DEBUG TIME ZERO NO REWIND"
+            puts $replicate_id "$ptime : $old_objective -> $new_objective : seed $last_seed"
+
             set ptime [senv time];
             set old_objective "$new_objective"
 
@@ -172,6 +177,9 @@ proc ::rclass::eval_loop {} {
             # IF YOU ALREADY REWOUND WITH THE RECOMMENDED SEED LET IT FLOW THROUGH
             if { [string equal $p_existing $ptime] } {
                 puts "DEBUG DO NOT REWIND"
+
+                puts $replicate_id "$ptime : $old_objective -> $new_objective : seed $last_seed"
+
                 set ptime [senv time]
                 # set p_existing $ptime
                 set old_objective "$new_objective"
@@ -225,13 +233,6 @@ proc ::rclass::eval_loop {} {
         checkpoint -join "$check_id" -keep;
         # checkpoint -list
 
-        # TODO which is necessary
-        # THIS WORKS
-        # force top.dif.seed 32'd[expr {int(rand()*4294967294+1)}] -deposit
-
-        # THESE DO NOT WORK
-        # call top.set_seed(32'd${tseed})
-
         set last_seed [expr {int(rand()*4294967294+1)}]
 
         call top.rseed_interface.set_seed(32'd${last_seed})
@@ -257,23 +258,13 @@ proc ::rclass::eval_loop {} {
             # checkpoint -list
         } else {
             puts "INFO STATUS : TCL : LOCAL REJECTED seed: $last_seed at time: $ptime"
-
-            # DEBUG
             puts "INFO STATUS : TCL : $ctime : NO PROGRESS : false: $new_objective > $old_objective REWINDING TO CHECKPOINT {$check_id} at $ptime"; #
             checkpoint -join "$check_id" -keep;
             # checkpoint -list
 
-            # TODO which is necessary
-            # THIS WORKS
-            # force top.dif.seed 32'd[expr {int(rand()*4294967294+1)}] -deposit
-
-            # THESE DO NOT WORK
-            # call top.set_seed(32'd${tseed})
-
             set last_seed [expr {int(rand()*4294967294+1)}]
 
             call top.rseed_interface.set_seed(32'd${last_seed})
-            # puts "DEBUG redoing with $last_seed at $ptime"
         }
 
     } else {
@@ -293,8 +284,9 @@ proc ::rclass::eval_loop {} {
 
 proc ::rclass::reload_main {} {
     variable replicate_id
+    variable client_index
 
-    set replicate_id [open "replicate" "r"]
+    set replicate_id [open "replicate_${client_index}" "r"]
 }
 
 proc ::rclass::main {} {
@@ -304,8 +296,7 @@ proc ::rclass::main {} {
     variable port
     variable max_objective
     variable last_seed
-
-    set replicate_id [open "replicate" "w"]
+    variable client_index
 
     # puts $replicate_id "$ctime : 0.0 : seed $last_seed"
     # flush $replicate_id
@@ -315,8 +306,11 @@ proc ::rclass::main {} {
     set port [get top.rseed_interface.port]
     set max_objective [get top.rseed_interface.max_objective]
     set last_seed [format %u [get top.rseed_interface.seed]]
+    set client_index [get top.rseed_interface.client_index]
 
-    puts "DEBUG last_seed : $last_seed"
+    set replicate_id [open "replicate_${client_index}" "w"]
+
+    puts "DEBUG last_seed : $last_seed - client_index : $client_index"
 
     puts "DEBUG server: $server and port: $port"
     if { $server == "none" } {

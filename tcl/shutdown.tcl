@@ -3,7 +3,7 @@
 set server 127.0.0.1
 set sockChan [socket $server 9000]
 
-puts $sockChan "SUMMARY";
+puts $sockChan "SHUTDOWN";
 flush $sockChan;
 
 gets $sockChan line;

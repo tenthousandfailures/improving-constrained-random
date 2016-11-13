@@ -5,10 +5,11 @@ interface rseed_interface (
 
    bit                     trigger         = 0;
    time                    start_time      = 7;
-   time                    loop_time       = 10;
+   time                    interval_time   = 10;
    bit                     final_report    = 0;
    real                    coverage_value  = 0;
-   int                     max_objective      = 100;
+   int                     client_index    = 0;
+   int                     max_objective   = 100;
    int                     unsigned seed;
 
    irand::master_seed      ms;
@@ -57,11 +58,12 @@ interface rseed_interface (
 
    initial begin
       $value$plusargs("start_time=%d", start_time);
-      $value$plusargs("loop_time=%d", loop_time);
+      $value$plusargs("interval_time=%d", interval_time);
+      $value$plusargs("client_index=%d", client_index);
 
       #(start_time);
       forever begin
-         #(loop_time);
+         #(interval_time);
 
          // use variable instead of file to pass over coverage value
          coverage_value                 = dut.objective.match.get_coverage();

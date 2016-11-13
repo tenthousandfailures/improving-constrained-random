@@ -85,10 +85,10 @@ class ms_sequence_item extends uvm_sequence_item;
 endclass
 
 // the txn
-class num_sequence_item #(parameter width=2) extends ms_sequence_item;
+class num_sequence_item #(parameter width=3) extends ms_sequence_item;
    // `uvm_object_param_utils(num_sequence_item#(width));
 
-   rand logic [width:0] num;
+   rand int unsigned num;
 
    function new();
       super.new();
@@ -102,10 +102,10 @@ class num_sequence_item #(parameter width=2) extends ms_sequence_item;
    // randomize and print
    function void rprint();
       this.randomize();
-      // `uvm_info("CR", $sformatf("num is: %d", num), UVM_DEBUG)
+      `uvm_info("CR", $sformatf("num is: %d", num), UVM_HIGH)
    endfunction
 
-   function logic [width:0] get_num();
+      function int unsigned get_num();
       return num;
    endfunction
 
@@ -114,14 +114,14 @@ endclass
 class test0 extends uvm_test;
    `uvm_component_utils(test0)
 
-   parameter width  = 1;
+   parameter width  = 2;
 
-   time loop_time;
+   time interval_time;
 
-   num_sequence_item#(width) c_a, c_b;
+   num_sequence_item c_a, c_b;
 
    virtual rseed_interface rseed_interface;
-   virtual dut_if#(width) dif;
+   virtual dut_if dif;
 
    function new(string name = "test0", uvm_component parent = null);
       super.new(name, parent);
@@ -129,15 +129,12 @@ class test0 extends uvm_test;
       if (!uvm_config_db#(virtual rseed_interface)::get(this, "", "rseed_interface", rseed_interface)) begin
          `uvm_fatal("test0", "Failed to get rseed_interface")
       end
-      if (!uvm_config_db#(virtual dut_if#(width))::get(this, "", "dif", dif)) begin
+      if (!uvm_config_db#(virtual dut_if)::get(this, "", "dif", dif)) begin
          `uvm_fatal("test0", "Failed to get dut_if")
       end
 
-      // get loop time to loop one last time through
-      $value$plusargs("loop_time=%d", loop_time);
-
-      // c_a  = num_sequence_item#(width)::type_id::create();
-      // c_b  = num_sequence_item#(width)::type_id::create();
+      // get interval time
+      $value$plusargs("interval_time=%d", interval_time);
 
       c_a  = new();
       c_b  = new();
@@ -167,8 +164,8 @@ class test0 extends uvm_test;
       join_any
 
       // wait just a little to run any other cleanup things
-      #(loop_time);
-      #(loop_time);
+      #(interval_time);
+      #(interval_time);
       phase.drop_objection(this);
    endtask
 
