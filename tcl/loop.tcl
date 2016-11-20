@@ -10,6 +10,8 @@ package require rclass_network 1.0
 run 0
 
 # setup the trigger to evaluate on - run 0 to finish off anything still processing
+
+stop -quiet -change {top.rseed_interface.code_coverage_trigger} -command {puts "INFO STATUS : TCL : activated code_coverage_trigger"; rclass::get_coverage; run;} -continue
 stop -quiet -change {top.rseed_interface.trigger} -command {run 0; rclass::eval_loop; run;} -continue
 stop -quiet -change {top.rseed_interface.final_report} -command {run 0; rclass::final_report; run;} -continue
 

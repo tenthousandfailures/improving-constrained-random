@@ -17,6 +17,7 @@ DVEfiles/
 .inter.vpd.uvm
 .DS_Store
 .vcs_checkpoint*
+urgReport/
 snps_work/
 t
 target

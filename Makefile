@@ -8,6 +8,10 @@ MAX_OBJECTIVE = 99
 SERVER = none
 # SERVER = 127.0.0.1
 
+# enable coverage dumping
+# COVERAGE_DUMP = 1
+COVERAGE_DUMP = 0
+
 # override for +ntb_random_seed_automatic if desired
 SEED = +ntb_random_seed=2
 # SEED =
@@ -31,9 +35,10 @@ BUILD_LIST = \
 	sv/top.sv \
 
 # UVM_DEBUG UVM_HIGH UVM_MEDIUM UVM_LOW
-UVM_VERBOSITY = UVM_MEDIUM
+UVM_VERBOSITY = UVM_HIGH
 
 SYNOPSYS_SIM_COMMON = \
+	-cm line \
 	+UVM_TESTNAME=test0 \
 	+UVM_VERBOSITY=$(UVM_VERBOSITY) \
 	+ntb_random_seed_automatic $(SEED) \
@@ -45,6 +50,7 @@ SYNOPSYS_SIM_COMMON = \
 	+start_time=$(START_TIME) \
 	+interval_time=$(INTERVAL_TIME) \
 	+max_objective=$(MAX_OBJECTIVE) \
+	+coverage_dump=$(COVERAGE_DUMP) \
 	-ucli \
 	-ucli2Proc \
 	$(SFLAGS) -l $(SYNOPSYS_SIM_LOG)
@@ -61,6 +67,7 @@ SYNOPSYS_BUILD_COMMON = \
 		-l snps_work/dut.comp.log \
 		-o snps_work/dut \
 		-timescale="1ns/1ns" \
+		-cm line \
 		+define+UVM_NO_DEPRECATED \
 		+define+UVM_OBJECT_MUST_HAVE_CONSTRUCTOR \
 		+define+UVM_SV_SEED \
@@ -151,6 +158,7 @@ report_finish_time: ## Report the finish time of simulation log
 	cat $(SYNOPSYS_SIM_LOG) | grep "finish at sim" | awk '{print $$NF}'
 
 clean: ## Cleans up work area
+	@rm -rf urgReport
 	@rm -f replicate_*
 	@rm -rf snps_work
 	@rm -rf objective

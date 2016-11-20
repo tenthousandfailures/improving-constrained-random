@@ -107,6 +107,35 @@ proc ::rclass::send_progress {} {
     return $line
 }
 
+proc ::rclass::get_coverage {} {
+    variable server
+    variable port
+
+    variable ctime
+    variable old_objective
+    variable new_objective
+    variable replicate_id
+    variable ptime
+    variable last_seed
+    variable ptline
+    variable check_id
+    variable iteration_count
+    variable max_objective
+    variable client_index
+
+    variable p_existing
+
+    # exec echo "hi" > t
+
+    exec ./scripts/urg_report.sh ${client_index}
+    # exec urg -dir snps_work/dut.vdb -metric line -format text > /dev/null 2>&1
+    # exec cat urgReport/modinfo.txt | egrep --after-context=3 "^Module : dut" > code_coverage_${client_index}.txt
+    set cc [exec cat urgReport/modinfo.txt | egrep --after-context=3 "^Module : dut" | tail -n 1 | awk {{print $2}}]
+    call top.rseed_interface.set_code_coverage(${cc})
+
+    # set code_coverage_id [open "replicate_${client_index}" "r"]
+}
+
 proc ::rclass::eval_loop {} {
     variable server
     variable port
