@@ -2,7 +2,7 @@ SFLAGS =
 PORT = 9000
 START_TIME = 7
 INTERVAL_TIME = 10
-MAX_OBJECTIVE = 99
+MAX_OBJECTIVE = 100
 
 # if "none" then run locally without server code
 SERVER = none
@@ -105,12 +105,14 @@ sim_synopsys_parallel: ${SIM_SYNOPSYS_PARALLEL_JOBS} ## Runs parallel Synopsys s
 
 sim_synopsys_parallel_perf: ## Performance of parallel simulations
 	@+$(MAKE) server &
+	sleep 5
 	date +%s > former_seconds.log
 	@+$(MAKE) sim_synopsys_parallel
 	date +%s > later_seconds.log
 	paste later_seconds.log former_seconds.log | awk '{print $$1 - $$2}' >> runtime.log
 	./tcl/status.tcl >> status.log
 	@+$(MAKE) shutdown
+	sleep 5
 	echo "$@ success"
 
 ${SIM_SYNOPSYS_PARALLEL_JOBS}: sim_synopsys_parallel_job%:

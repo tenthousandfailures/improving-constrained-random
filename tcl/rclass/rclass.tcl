@@ -257,16 +257,17 @@ proc ::rclass::eval_loop {} {
     } elseif { [string equal $status "REJECTED"] } {
         puts "INFO STATUS : TCL : SERVER REJECTED seed: $last_seed at time: $ptime"
 
-        # DEBUG
-        puts "INFO STATUS : TCL : $ctime : NO PROGRESS : false: $new_objective > $old_objective REWINDING TO CHECKPOINT {$check_id} at $ptime"; #
-        checkpoint -join "$check_id" -keep;
-        # checkpoint -list
-
-        set last_seed [expr {int(rand()*4294967294+1)}]
-
-        call top.rseed_interface.set_seed(32'd${last_seed})
-        # puts "DEBUG redoing with $last_seed at $ptime"
-
+        if { [expr "$old_objective" >= "$max_objective"] } {
+            puts "INFO STATUS : TCL : $ctime : OBJECTIVE MET"
+        } else {
+            # DEBUG
+            puts "INFO STATUS : TCL : $ctime : NO PROGRESS : false: $new_objective > $old_objective REWINDING TO CHECKPOINT {$check_id} at $ptime"
+            checkpoint -join "$check_id" -keep
+            # checkpoint -list
+            set last_seed [expr {int(rand()*4294967294+1)}]
+            call top.rseed_interface.set_seed(32'd${last_seed})
+            # puts "DEBUG redoing with $last_seed at $ptime"
+        }
     } elseif { [string equal $status "LOCAL"] } {
 
         if { [expr "$new_objective" > "$old_objective"] || [expr "$new_objective" >= ${max_objective}] } {
