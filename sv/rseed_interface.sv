@@ -78,42 +78,53 @@ interface rseed_interface (
       #(start_time);
       forever begin
 
-         #(interval_time);
+         fork
 
-         // coverage_dump is only valid is the postpone region which is problematic
-         if (coverage_dump) begin
-            $coverage_dump($sformatf("client_index_%0d", client_index));
-            `uvm_info("RS", $sformatf("coverage_dump for previous"), UVM_LOW)
-         end
+            begin
+               #(interval_time - 1);
 
-         // use variable instead of file to pass over coverage value
-         coverage_value                 = dut.objective.match.get_coverage();
-         ms.set_coverage_value(coverage_value);
+               // coverage_dump is only valid is the postpone region which is problematic
+               // kick off this loop to end just before the eval below
+               if (coverage_dump) begin
+                  $coverage_dump($sformatf("client_index_%0d", client_index));
+                  `uvm_info("RS", $sformatf("coverage_dump for previous"), UVM_LOW)
+               end
 
-         `uvm_info("TOP", $sformatf("INFO STATUS :  SV : %0t : a = %d, b = %d, c = %d, match = %d, seed = %d, cg = %f, cc = %f",
-                                    $time,
-                                    dut.a,
-                                    dut.b,
-                                    dut.c,
-                                    dut.match,
-                                    ms.return_seed(),
-                                    ms.get_coverage_value(),
-                                    code_coverage_value
-                                    ), UVM_HIGH)
+            end
 
-         if (coverage_dump) begin
-            `uvm_info("RS", $sformatf("coverage_dump"), UVM_LOW)
-            code_coverage_trigger  = ~code_coverage_trigger;
-         end
+            begin
+               #(interval_time);
 
 
-         // set off the trigger for the simulator TCL shell to process
-         trigger  = ~trigger;
-         if (ms.get_coverage_value() >= ms.max_objective) begin
-            `uvm_info("RS", $sformatf("COVERAGE GOAL MET coverage: %d max_objective: %d", ms.get_coverage_value(), ms.max_objective), UVM_LOW)
-            // $finish();
-            final_report  = 1;
-         end
+               // use variable instead of file to pass over coverage value
+               coverage_value                 = dut.objective.match.get_coverage();
+               ms.set_coverage_value(coverage_value);
+
+               `uvm_info("TOP", $sformatf("INFO STATUS :  SV : %0t : a = %d, b = %d, c = %d, match = %d, seed = %d, cg = %f, cc = %f",
+                                          $time,
+                                          dut.a,
+                                          dut.b,
+                                          dut.c,
+                                          dut.match,
+                                          ms.return_seed(),
+                                          ms.get_coverage_value(),
+                                          code_coverage_value
+                                          ), UVM_HIGH)
+
+               if (coverage_dump) begin
+                  `uvm_info("RS", $sformatf("coverage_dump"), UVM_LOW)
+                  code_coverage_trigger  = ~code_coverage_trigger;
+               end
+
+               // set off the trigger for the simulator TCL shell to process
+               trigger  = ~trigger;
+               if (ms.get_coverage_value() >= ms.max_objective) begin
+                  `uvm_info("RS", $sformatf("COVERAGE GOAL MET coverage: %d max_objective: %d", ms.get_coverage_value(), ms.max_objective), UVM_LOW)
+                  // $finish();
+                  final_report  = 1;
+               end
+            end
+         join
       end
    end
 
