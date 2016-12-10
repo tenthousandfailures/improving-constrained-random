@@ -35,10 +35,9 @@ BUILD_LIST = \
 	sv/top.sv \
 
 # UVM_DEBUG UVM_HIGH UVM_MEDIUM UVM_LOW
-UVM_VERBOSITY = UVM_HIGH
+UVM_VERBOSITY = UVM_LOW
 
 SYNOPSYS_SIM_COMMON = \
-	-cm line \
 	+UVM_TESTNAME=test0 \
 	+UVM_VERBOSITY=$(UVM_VERBOSITY) \
 	+ntb_random_seed_automatic $(SEED) \
@@ -54,6 +53,8 @@ SYNOPSYS_SIM_COMMON = \
 	-ucli \
 	-ucli2Proc \
 	$(SFLAGS) -l $(SYNOPSYS_SIM_LOG)
+
+#	-cm line \
 
 # not needed yet
 # +vcs+flush_all
