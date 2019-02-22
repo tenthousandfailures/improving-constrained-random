@@ -63,6 +63,7 @@ SYNOPSYS_SIM_COMMON = \
 # +UVM_CONFIG_DB_TRACE \
 
 SYNOPSYS_BUILD_COMMON = \
+		-full64 \
 		-sverilog \
 		-ntb_opts uvm \
 		-l snps_work/dut.comp.log \

@@ -28,7 +28,7 @@ module top#(parameter width=2) ();
 
    // kill block
    initial begin
-      #1000;
+      #10000000;
       `uvm_warning("TOP", $sformatf("REACHED TIMEOUT"))
       $finish();
    end

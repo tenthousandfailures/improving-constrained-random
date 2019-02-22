@@ -3,6 +3,10 @@ interface rseed_interface (
                      input reset
                      );
 
+
+`include "uvm_macros.svh"
+   import uvm_pkg::*;
+   
    bit                     trigger                = 0;
    bit                     code_coverage_trigger  = 0;
    time                    start_time             = 7;

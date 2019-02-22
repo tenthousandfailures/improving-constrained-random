@@ -3,6 +3,10 @@ interface dut_if #(parameter width=2) (
           input reset
                                        );
 
+`include "uvm_macros.svh"
+   import uvm_pkg::*;
+  
+
    logic [width-1:0] a;
    logic [width-1:0] b;
    logic             c;
